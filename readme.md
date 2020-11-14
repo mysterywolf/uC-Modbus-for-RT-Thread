@@ -18,4 +18,4 @@ https://github.com/SiliconLabs/uC-Modbus
 
 
 
-### For the complete documentation, visit https://doc.micrium.com/display/ucos/
+### For the complete documentation, visit https://doc.micrium.com/pages/viewpage.action?pageId=10753125
