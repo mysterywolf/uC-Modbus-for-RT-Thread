@@ -188,30 +188,38 @@ CPU_INT16U  MB_InRegRd (CPU_INT16U   reg,
 {
     CPU_INT16U  val;
     CPU_SR      cpu_sr;
-
+    OS_ERR      err;
 
     switch (reg) {
         case 10:
+#if OS_CFG_STAT_TASK_EN > 0u
              CPU_CRITICAL_ENTER();
-             val = (CPU_INT16U)OSCPUUsage;
+             val = (CPU_INT16U)(OSStatTaskCPUUsage/100);
              CPU_CRITICAL_EXIT();
+#else
+             val = (CPU_INT16U)0;
+#endif
              break;
 
         case 11:
+#if 0
              CPU_CRITICAL_ENTER();
              val = (CPU_INT16U)OSCtxSwCtr;
              CPU_CRITICAL_EXIT();
+#else
+             val = (CPU_INT16U)0;
+#endif
              break;
 
         case 12:
              CPU_CRITICAL_ENTER();
-             val = (CPU_INT16U)(OSTime >> 16);
+             val = (CPU_INT16U)(OSTimeGet(&err) >> 16);
              CPU_CRITICAL_EXIT();
              break;
 
         case 13:
              CPU_CRITICAL_ENTER();
-             val = (CPU_INT16U)(OSTime & 0x0000FFFF);
+             val = (CPU_INT16U)(OSTimeGet(&err) & 0x0000FFFF);
              CPU_CRITICAL_EXIT();
              break;
 
@@ -309,30 +317,37 @@ CPU_INT16U  MB_HoldingRegRd (CPU_INT16U   reg,
 {
     CPU_INT16U  val;
     CPU_SR      cpu_sr;
-
+    OS_ERR      err;
 
     switch (reg) {
         case 0:
+#if OS_CFG_STAT_TASK_EN > 0u
              CPU_CRITICAL_ENTER();
-             val = (CPU_INT16U)OSCPUUsage;
+             val = (CPU_INT16U)(OSStatTaskCPUUsage/100);
              CPU_CRITICAL_EXIT();
+#else
+             val = (CPU_INT16U)0;
+#endif
              break;
 
         case 1:
+#if 0
              CPU_CRITICAL_ENTER();
              val = (CPU_INT16U)OSCtxSwCtr;
              CPU_CRITICAL_EXIT();
-             break;
+#else
+             val = (CPU_INT16U)0;
+#endif
 
         case 2:
              CPU_CRITICAL_ENTER();
-             val = (CPU_INT16U)(OSTime >> 16);
+             val = (CPU_INT16U)(OSTimeGet(&err) >> 16);
              CPU_CRITICAL_EXIT();
              break;
 
         case 3:
              CPU_CRITICAL_ENTER();
-             val = (CPU_INT16U)(OSTime & 0x0000FFFF);
+             val = (CPU_INT16U)(OSTimeGet(&err) & 0x0000FFFF);
              CPU_CRITICAL_EXIT();
              break;
 
