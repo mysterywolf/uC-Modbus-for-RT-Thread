@@ -32,7 +32,7 @@
 */
 
 #define    MBM_MODULE
-#include  <mb.h>
+#include  "mb.h"
 
 
 #if (MODBUS_CFG_MASTER_EN == DEF_ENABLED)

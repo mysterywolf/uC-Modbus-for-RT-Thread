@@ -31,7 +31,7 @@
 */
 
 #define   MBS_MODULE
-#include <mb.h>
+#include "mb.h"
 
 #if (MODBUS_CFG_SLAVE_EN == DEF_ENABLED)
 

@@ -32,7 +32,7 @@
 */
 
 #define   MB_OS_MODULE
-#include <mb.h>
+#include "mb.h"
 
 
 /*
