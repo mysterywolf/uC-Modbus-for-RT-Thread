@@ -437,12 +437,6 @@ void         MB_CommPortCfg             (MODBUS_CH   *pch,
                                          CPU_INT08U   parity,
                                          CPU_INT08U   stops);
 
-
-void         MB_CommRxIntEn             (MODBUS_CH   *pch);           /* Enable  Rx interrupts                                        */
-
-void         MB_CommRxIntDis            (MODBUS_CH   *pch);           /* Disable Rx interrupts                                        */
-
-
 #if (MODBUS_CFG_RTU_EN == DEF_ENABLED)
 void         MB_RTU_TmrInit             (void);                       /* Initialize the timer used for RTU framing                    */
 

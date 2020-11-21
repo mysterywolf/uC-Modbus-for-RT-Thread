@@ -46,8 +46,7 @@
 #include "mb.h"
 #include <os.h>
 #include <rtdevice.h>
-
-#define MODBUS_DEVICE_NAME "uart1"
+#include <stdlib.h>
 
 /*
 *********************************************************************************************************
@@ -75,9 +74,56 @@
 
 CPU_VOID  MB_CommExit (CPU_VOID)
 {
+    CPU_INT08U   ch;
+    MODBUS_CH   *pch;
+    char uart_dev_name[RT_NAME_MAX]={0};
+    rt_device_t uart_dev;
+
+    pch = &MB_ChTbl[0];
+    for (ch = 0; ch < MODBUS_CFG_MAX_CH; ch++) {
+        if(pch == RT_NULL){
+            pch++;
+            continue;
+        }
+
+        rt_snprintf(uart_dev_name, RT_NAME_MAX, "uart%d", pch->PortNbr);   
+        uart_dev = rt_device_find(uart_dev_name);
+        if(uart_dev == (rt_device_t)0){
+            pch++;
+            continue;
+        }
+
+        rt_device_close(uart_dev);
+        pch++;
+    }
 }
 
- 
+static rt_err_t mb_rx_1_byte_handler(rt_device_t dev, rt_size_t size)
+{
+    CPU_INT08U byte;
+    CPU_INT08U   ch;
+    MODBUS_CH  *pch;
+    char dev_id_name[RT_NAME_MAX] = {0};
+    CPU_INT08U id;
+    
+    rt_strncpy(dev_id_name, &dev->parent.name[4], 2); /* "uart1" -> "1"*/
+    id = atoi(dev_id_name); /* "1" -> 1 */
+    
+    pch = &MB_ChTbl[0];
+    for (ch = 0; ch < MODBUS_CFG_MAX_CH; ch++) {
+        if(pch->PortNbr == id){
+            break;
+        }
+        pch++;
+    }
+    
+    if(rt_device_read(dev, -1, &byte, 1) == 1) /* read one byte from uart */
+    {
+        MB_RxByte(pch, byte); /* invoke MB_RxByte() */
+    }
+    return RT_EOK;
+}
+
 /*
 *********************************************************************************************************
 *                                           MB_CommPortCfg()
@@ -194,7 +240,8 @@ CPU_VOID  MB_CommPortCfg (MODBUS_CH  *pch,
     config.bufsz     = 128;
     
     rt_device_control(uart_dev, RT_DEVICE_CTRL_CONFIG, &config);
-    rt_device_open(uart_dev, RT_DEVICE_FLAG_DMA_RX|RT_DEVICE_FLAG_DMA_TX);
+    rt_device_open(uart_dev, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_DMA_TX);
+    rt_device_set_rx_indicate(uart_dev, mb_rx_1_byte_handler);
 }
 
 /*
@@ -241,46 +288,6 @@ void  MB_Tx (MODBUS_CH  *pch)
         pch->TxCtr = pch->TxBufByteCtr;
         pch->TxBufByteCtr = 0;
     }
-}
-
-/*
-*********************************************************************************************************
-*                                         MB_CommRxIntDis()
-*
-* Description : This function disables Rx interrupts.
-*
-* Argument(s) : pch        is a pointer to the Modbus channel
-*
-* Return(s)   : none.
-*
-* Caller(s)   : MB_CommExit()
-*
-* Note(s)     : none.
-*********************************************************************************************************
-*/
-
-void  MB_CommRxIntDis (MODBUS_CH  *pch)
-{
-}
-
-/*
-*********************************************************************************************************
-*                                          MB_CommRxIntEn()
-*
-* Description : This function enables Rx interrupts.
-*
-* Argument(s) : pch        is a pointer to the Modbus channel
-*
-* Return(s)   : none.
-*
-* Caller(s)   : MB_TxByte()
-*
-* Note(s)     : none.
-*********************************************************************************************************
-*/
-
-void  MB_CommRxIntEn (MODBUS_CH  *pch)
-{
 }
 
 
