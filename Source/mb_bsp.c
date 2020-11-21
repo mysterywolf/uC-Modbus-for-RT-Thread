@@ -199,6 +199,52 @@ CPU_VOID  MB_CommPortCfg (MODBUS_CH  *pch,
 
 /*
 *********************************************************************************************************
+*                                                MB_Tx()
+*
+* Description : This function is called to start transmitting a packet to a modbus channel.
+*
+* Argument(s) : pch      Is a pointer to the Modbus channel's data structure.
+*
+* Return(s)   : none.
+*
+* Caller(s)   : MB_ASCII_Tx(),
+*               MB_RTU_Tx().
+*
+* Note(s)     : none.
+*********************************************************************************************************
+*/
+/* combine MB_Tx() and MB_TxByte() */
+void  MB_Tx (MODBUS_CH  *pch)
+{
+    char uart_dev_name[RT_NAME_MAX]={0};
+    rt_device_t uart_dev;
+    
+    pch->TxBufPtr = &pch->TxBuf[0];
+    if (pch->TxBufByteCtr > 0) {
+#if (MODBUS_CFG_MASTER_EN == DEF_ENABLED)
+        if (pch->MasterSlave == MODBUS_MASTER) {
+#if (MODBUS_CFG_RTU_EN == DEF_ENABLED)
+            pch->RTU_TimeoutEn = MODBUS_FALSE;                  /* Disable RTU timeout timer until we start receiving */
+#endif
+            pch->RxBufByteCtr  = 0;                             /* Flush Rx buffer                                    */
+        }
+#endif
+        rt_snprintf(uart_dev_name, RT_NAME_MAX, "uart%d", pch->PortNbr);   
+        uart_dev = rt_device_find(uart_dev_name);
+        if(uart_dev == (rt_device_t)0){
+            return;
+        }
+        
+        rt_device_write(uart_dev,0,pch->TxBufPtr,pch->TxBufByteCtr); /* send a message */
+        
+        /* end of transmission */
+        pch->TxCtr = pch->TxBufByteCtr;
+        pch->TxBufByteCtr = 0;
+    }
+}
+
+/*
+*********************************************************************************************************
 *                                         MB_CommRxIntDis()
 *
 * Description : This function disables Rx interrupts.
@@ -236,73 +282,6 @@ void  MB_CommRxIntDis (MODBUS_CH  *pch)
 void  MB_CommRxIntEn (MODBUS_CH  *pch)
 {
 }
-
-/*
-*********************************************************************************************************
-*                                         MB_CommTxIntDis()
-*
-* Description : This function disables Tx interrupts.
-*
-* Argument(s) : pch        is a pointer to the Modbus channel
-*
-* Return(s)   : none.
-*
-* Caller(s)   : MB_CommExit()
-*               MB_TxByte()
-*
-* Note(s)     : none.
-*********************************************************************************************************
-*/
-
-void  MB_CommTxIntDis (MODBUS_CH  *pch)
-{
-}
-
-/*
-*********************************************************************************************************
-*                                         MB_CommTxIntEn()
-*
-* Description : This function enables Tx interrupts.
-*
-* Argument(s) : pch        is a pointer to the Modbus channel
-*
-* Return(s)   : none.
-*
-* Caller(s)   : MB_Tx()
-*
-* Note(s)     : none.
-*********************************************************************************************************
-*/
-
-void  MB_CommTxIntEn (MODBUS_CH  *pch)
-{
-}
-
-/*
-*********************************************************************************************************
-*                                             MB_CommTx1()
-*
-* Description : This function is called to obtain the next byte to send from the transmit buffer.  When
-*               all bytes in the reply have been sent, transmit interrupts are disabled and the receiver
-*               is enabled to accept the next Modbus request.
-*
-* Argument(s) : c     is the byte to send to the serial port
-*
-* Return(s)   : none.
-*
-* Caller(s)   : MB_TxByte()
-*
-* Note(s)     : none.
-*********************************************************************************************************
-*/
-
-void  MB_CommTx1 (MODBUS_CH  *pch,
-                  CPU_INT08U  c)
-
-{
-}
-
-
 
 
 /*

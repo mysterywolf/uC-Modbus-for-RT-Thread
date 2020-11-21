@@ -477,7 +477,7 @@ void  MB_RxByte (MODBUS_CH  *pch,
     }
 }
 
- 
+
 /*
 *********************************************************************************************************
 *                                              MB_RxTask()
@@ -504,78 +504,8 @@ void  MB_RxTask (MODBUS_CH *pch)
     }
 #endif
 }
-/*
-*********************************************************************************************************
-*                                                MB_Tx()
-*
-* Description : This function is called to start transmitting a packet to a modbus channel.
-*
-* Argument(s) : pch      Is a pointer to the Modbus channel's data structure.
-*
-* Return(s)   : none.
-*
-* Caller(s)   : MB_ASCII_Tx(),
-*               MB_RTU_Tx().
-*
-* Note(s)     : none.
-*********************************************************************************************************
-*/
-
-void  MB_Tx (MODBUS_CH  *pch)
-{
-    pch->TxBufPtr = &pch->TxBuf[0];
-    MB_TxByte(pch);
-    MB_CommRxIntDis(pch);
-    MB_CommTxIntEn(pch);
-}
-
- 
-/*
-*********************************************************************************************************
-*                                              MB_TxByte()
-*
-* Description : This function is called to obtain the next byte to send from the transmit buffer.  When
-*               all bytes in the reply have been sent, transmit interrupts are disabled and the receiver
-*               is enabled to accept the next Modbus request.
-*
-* Argument(s) : pch      Is a pointer to the Modbus channel's data structure.
-*
-* Return(s)   : none.
-*
-* Caller(s)   : MB_CommRxTxISR_Handler(),
-*               MB_Tx().
-*
-* Note(s)     : none.
-*********************************************************************************************************
-*/
-
-void  MB_TxByte (MODBUS_CH  *pch)
-{
-    CPU_INT08U  c;
 
 
-    if (pch->TxBufByteCtr > 0) {
-        pch->TxBufByteCtr--;
-        pch->TxCtr++;
-        c = *pch->TxBufPtr++;
-        MB_CommTx1(pch,                                         /* Write one byte to the serial port                  */
-                   c);
-#if (MODBUS_CFG_MASTER_EN == DEF_ENABLED)
-        if (pch->MasterSlave == MODBUS_MASTER) {
-#if (MODBUS_CFG_RTU_EN == DEF_ENABLED)
-            pch->RTU_TimeoutEn = MODBUS_FALSE;                  /* Disable RTU timeout timer until we start receiving */
-#endif
-            pch->RxBufByteCtr  = 0;                             /* Flush Rx buffer                                    */
-        }
-#endif
-    } else {                                                    /* If there is nothing to do end transmission         */
-        pch->TxBufPtr = &pch->TxBuf[0];                         /* Reset at beginning of buffer                       */
-        MB_CommTxIntDis(pch);                                   /* No more data to send, disable Tx interrupts        */
-        MB_CommRxIntEn(pch);                                    /* Re-enable the receiver for the next packet         */
-    }
-}
-
- 
 /*
 *********************************************************************************************************
 *                                           MB_ASCII_RxByte()

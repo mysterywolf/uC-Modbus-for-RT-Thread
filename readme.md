@@ -12,17 +12,17 @@ https://github.com/SiliconLabs/uC-Modbus
 
 ## 串口设备移植文件`mb_bsp.c`
 
-|     函数名称      | 说明 |
-| :---------------: | :--: |
-|   MB_CommExit()   |      |
-| MB_CommPortCfg()  |      |
-| MB_CommRxIntDis() |      |
-| MB_CommRxIntEn()  |      |
-|   MB_CommTx1()    |      |
-| MB_CommTxIntDis() |      |
-| MB_CommTxIntEn()  |      |
-| MB_RTU_TmrExit()  |      |
-| MB_RTU_TmrInit()  |      |
+|     函数名称      |     说明     |
+| :---------------: | :----------: |
+|   MB_CommExit()   |              |
+| MB_CommPortCfg()  |              |
+| MB_CommRxIntDis() |              |
+| MB_CommRxIntEn()  |              |
+|   MB_CommTx1()    | 无用，已删除 |
+| MB_CommTxIntDis() | 无用，已删除 |
+| MB_CommTxIntEn()  | 无用，已删除 |
+| MB_RTU_TmrExit()  |              |
+| MB_RTU_TmrInit()  |              |
 
 
 

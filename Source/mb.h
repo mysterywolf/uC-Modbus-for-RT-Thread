@@ -437,27 +437,10 @@ void         MB_CommPortCfg             (MODBUS_CH   *pch,
                                          CPU_INT08U   parity,
                                          CPU_INT08U   stops);
 
-void         MB_CommRxTxISR_0_Handler   (void);
-void         MB_CommRxTxISR_1_Handler   (void);
-void         MB_CommRxTxISR_2_Handler   (void);
-void         MB_CommRxTxISR_3_Handler   (void);
-void         MB_CommRxTxISR_4_Handler   (void);
-void         MB_CommRxTxISR_5_Handler   (void);
-void         MB_CommRxTxISR_6_Handler   (void);
-void         MB_CommRxTxISR_7_Handler   (void);
-void         MB_CommRxTxISR_8_Handler   (void);
-void         MB_CommRxTxISR_9_Handler   (void);
 
 void         MB_CommRxIntEn             (MODBUS_CH   *pch);           /* Enable  Rx interrupts                                        */
 
 void         MB_CommRxIntDis            (MODBUS_CH   *pch);           /* Disable Rx interrupts                                        */
-
-void         MB_CommTx1                 (MODBUS_CH   *pch,
-                                         CPU_INT08U   c);
-
-void         MB_CommTxIntEn             (MODBUS_CH   *pch);           /* Enable  Tx interrupts                                        */
-
-void         MB_CommTxIntDis            (MODBUS_CH   *pch);           /* Disable Tx interrupts                                        */
 
 
 #if (MODBUS_CFG_RTU_EN == DEF_ENABLED)
