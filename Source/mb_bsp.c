@@ -43,7 +43,11 @@
 *********************************************************************************************************
 */
 
+#include "mb.h"
 #include <os.h>
+#include <rtdevice.h>
+
+#define MODBUS_DEVICE_NAME "uart1"
 
 /*
 *********************************************************************************************************
@@ -69,10 +73,8 @@
 *********************************************************************************************************
 */
 
-
 CPU_VOID  MB_CommExit (CPU_VOID)
 {
-
 }
 
  
@@ -104,18 +106,97 @@ CPU_VOID  MB_CommExit (CPU_VOID)
 *********************************************************************************************************
 */
 
-CPU_VOID  MB_CommPortCfg (CPU_INT08U  ch, 
+CPU_VOID  MB_CommPortCfg (MODBUS_CH  *pch, 
                           CPU_INT08U  port_nbr, 
                           CPU_INT32U  baud, 
                           CPU_INT08U  bits, 
                           CPU_INT08U  parity, 
                           CPU_INT08U  stops)
 {
+    char uart_dev_name[RT_NAME_MAX]={0};
+    rt_device_t uart_dev;                                           /* uart device handler */
+    struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
 
+    if (pch == (MODBUS_CH *)0){
+        return;
+    }
+    pch->PortNbr        = port_nbr;                                 /* Store configuration in channel              */
+    pch->BaudRate       = baud;
+    pch->Parity         = parity;
+    pch->Bits           = bits;
+    pch->Stops          = stops;        
+
+    rt_snprintf(uart_dev_name, RT_NAME_MAX, "uart%d", port_nbr);   
+    uart_dev = rt_device_find(uart_dev_name);
+    if(uart_dev == (rt_device_t)0){
+        return;
+    }
+    
+    switch(baud)
+    {
+        case 2400: 
+            config.baud_rate = BAUD_RATE_2400; break;
+        case 4800: 
+            config.baud_rate = BAUD_RATE_4800; break;
+        case 9600: 
+            config.baud_rate = BAUD_RATE_9600; break;
+        case 19200: 
+            config.baud_rate = BAUD_RATE_19200; break;
+        case 38400: 
+            config.baud_rate = BAUD_RATE_38400; break;
+        case 57600: 
+            config.baud_rate = BAUD_RATE_57600; break;
+        case 115200: 
+            config.baud_rate = BAUD_RATE_115200; break;
+        case 230400: 
+            config.baud_rate = BAUD_RATE_230400; break;
+        case 460800: 
+            config.baud_rate = BAUD_RATE_460800; break;
+        case 921600: 
+            config.baud_rate = BAUD_RATE_921600; break;
+        case 2000000: 
+            config.baud_rate = BAUD_RATE_2000000; break;
+        case 3000000: 
+            config.baud_rate = BAUD_RATE_3000000; break;
+        default:
+            config.baud_rate = BAUD_RATE_115200; break;
+    }
+    
+    switch(bits)
+    {
+        case 7:
+           config.data_bits = DATA_BITS_7; break;
+        case 8:
+        default:
+           config.data_bits = DATA_BITS_8; break;        
+    }
+    
+    switch(stops)
+    {
+        case 2:
+            config.stop_bits = STOP_BITS_2; break;
+        case 1:
+        default:
+            config.stop_bits = STOP_BITS_1; break;
+    }
+    
+    switch(parity)
+    {
+        case MODBUS_PARITY_ODD:
+            config.parity = PARITY_ODD; break;
+        case MODBUS_PARITY_EVEN:
+            config.parity = PARITY_EVEN; break;
+        case MODBUS_PARITY_NONE:
+        default:
+            config.parity = PARITY_NONE; break;
+    }
+
+    config.bufsz     = 128;
+    
+    rt_device_control(uart_dev, RT_DEVICE_CTRL_CONFIG, &config);
+    rt_device_open(uart_dev, RT_DEVICE_FLAG_DMA_RX|RT_DEVICE_FLAG_DMA_TX);
 }
 
-
- 
 /*
 *********************************************************************************************************
 *                                         MB_CommRxIntDis()
@@ -132,12 +213,10 @@ CPU_VOID  MB_CommPortCfg (CPU_INT08U  ch,
 *********************************************************************************************************
 */
 
-CPU_VOID  MBS_CommRxIntDis (MODBUS_CH  *pch)
+void  MB_CommRxIntDis (MODBUS_CH  *pch)
 {
-
 }
 
- 
 /*
 *********************************************************************************************************
 *                                          MB_CommRxIntEn()
@@ -153,61 +232,52 @@ CPU_VOID  MBS_CommRxIntDis (MODBUS_CH  *pch)
 * Note(s)     : none.
 *********************************************************************************************************
 */
-CPU_VOID  MBS_CommRxIntEn (MODBUS_CH  *pch)
-{
 
+void  MB_CommRxIntEn (MODBUS_CH  *pch)
+{
 }
 
- 
 /*
 *********************************************************************************************************
-*                                       MB_CommRxTxISR_Handler()
+*                                         MB_CommTxIntDis()
 *
-* Description : This function is the ISR for either a received or transmitted character.
+* Description : This function disables Tx interrupts.
 *
-* Argument(s) : none.
+* Argument(s) : pch        is a pointer to the Modbus channel
 *
 * Return(s)   : none.
 *
-* Caller(s)   : This is a ISR
+* Caller(s)   : MB_CommExit()
+*               MB_TxByte()
 *
-* Note(s)     : (1) The pseudo-code for this function should be:  
-*
-*               if (Rx Byte has been received) {
-*                  c = get byte from serial port;
-*                  Clear receive interrupt;
-*                  pch->RxCtr++;                      Increment the number of bytes received
-*                  MB_RxByte(pch, c);                 Pass character to Modbus to process
-*              }
-*
-*              if (Byte has been transmitted) {
-*                  pch->TxCtr++;                      Increment the number of bytes transmitted
-*                  MB_TxByte(pch);                    Send next byte in response
-*                  Clear transmit interrupt           Clear Transmit Interrupt flag
-*              }
+* Note(s)     : none.
 *********************************************************************************************************
 */
 
-CPU_VOID  MBS_CommRxTxISR_Handler (CPU_INT08U  port_nbr)
+void  MB_CommTxIntDis (MODBUS_CH  *pch)
 {
-
 }
 
- 
 /*
 *********************************************************************************************************
-*                                UART #0 Rx/Tx Communication handler for Modbus 
-*                                        (THIS IS THE START OF THE ISR!)
+*                                         MB_CommTxIntEn()
+*
+* Description : This function enables Tx interrupts.
+*
+* Argument(s) : pch        is a pointer to the Modbus channel
+*
+* Return(s)   : none.
+*
+* Caller(s)   : MB_Tx()
+*
+* Note(s)     : none.
 *********************************************************************************************************
 */
 
-interrupt CPU_VOID  MBS_CommRxTxISR_0_Handler (CPU_VOID)
+void  MB_CommTxIntEn (MODBUS_CH  *pch)
 {
-
 }
 
-
- 
 /*
 *********************************************************************************************************
 *                                             MB_CommTx1()
@@ -226,59 +296,15 @@ interrupt CPU_VOID  MBS_CommRxTxISR_0_Handler (CPU_VOID)
 *********************************************************************************************************
 */
 
-CPU_VOID  MBS_CommTx1 (MODBUS_CH  *pch, 
-                   CPU_INT08U  c)
-{
+void  MB_CommTx1 (MODBUS_CH  *pch,
+                  CPU_INT08U  c)
 
+{
 }
 
 
- 
-/*
-*********************************************************************************************************
-*                                         MB_CommTxIntDis()
-*
-* Description : This function disables Tx interrupts.
-*
-* Argument(s) : pch        is a pointer to the Modbus channel
-*
-* Return(s)   : none.
-*
-* Caller(s)   : MB_CommExit()
-*               MB_TxByte()
-*
-* Note(s)     : none.
-*********************************************************************************************************
-*/
 
-CPU_VOID  MBS_CommTxIntDis (MODBUS_CH  *pch)
-{
 
-}
-
- 
-/*
-*********************************************************************************************************
-*                                         MB_CommTxIntEn()
-*
-* Description : This function enables Tx interrupts.
-*
-* Argument(s) : pch        is a pointer to the Modbus channel
-*
-* Return(s)   : none.
-*
-* Caller(s)   : MB_Tx()
-*
-* Note(s)     : none.
-*********************************************************************************************************
-*/
-
-CPU_VOID  MBS_CommTxIntEn (MODBUS_CH  *pch)
-{
-
-}
-
- 
 /*
 *********************************************************************************************************
 *                                           MB_RTU_TmrInit()
@@ -316,7 +342,7 @@ CPU_VOID  MB_RTU_TmrInit (void)
 *
 * Note(s)     : none.
 *********************************************************************************************************
-*/s
+*/
 
 #if (MODBUS_CFG_RTU_EN == DEF_ENABLED)
 CPU_VOID  MB_RTU_TmrExit (CPU_VOID)
@@ -343,7 +369,7 @@ CPU_VOID  MB_RTU_TmrExit (CPU_VOID)
 */
 
 #if (MODBUS_CFG_RTU_EN == DEF_ENABLED)
-interrupt CPU_VOID  MB_RTU_Tmr_Timeout (CPU_VOID)
+CPU_VOID  MB_RTU_Tmr_Timeout (CPU_VOID)
 {
 }
 #endif
