@@ -93,6 +93,7 @@ CPU_VOID  MB_CommExit (CPU_VOID)
             continue;
         }
 
+        rt_device_set_rx_indicate(uart_dev, RT_NULL);
         rt_device_close(uart_dev);
         pch++;
     }
