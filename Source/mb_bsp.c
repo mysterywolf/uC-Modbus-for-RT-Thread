@@ -98,7 +98,7 @@ CPU_VOID  MB_CommExit (CPU_VOID)
     }
 }
 
-static rt_err_t mb_rx_1_byte_handler(rt_device_t dev, rt_size_t size)
+static rt_err_t mb_rx_handler(rt_device_t dev, rt_size_t size)
 {
     CPU_INT08U byte;
     CPU_INT08U   ch;
@@ -116,11 +116,15 @@ static rt_err_t mb_rx_1_byte_handler(rt_device_t dev, rt_size_t size)
         }
         pch++;
     }
-    
-    if(rt_device_read(dev, -1, &byte, 1) == 1) /* read one byte from uart */
+
+    for(ch=size; ch>0; ch--)
     {
-        MB_RxByte(pch, byte); /* invoke MB_RxByte() */
+        if(rt_device_read(dev, -1, &byte, 1) == 1) /* read one byte from uart */
+        {
+            MB_RxByte(pch, byte); /* invoke MB_RxByte() */
+        }
     }
+
     return RT_EOK;
 }
 
@@ -177,7 +181,7 @@ CPU_VOID  MB_CommPortCfg (MODBUS_CH  *pch,
     if(uart_dev == (rt_device_t)0){
         return;
     }
-    
+
     switch(baud)
     {
         case 2400: 
@@ -240,8 +244,10 @@ CPU_VOID  MB_CommPortCfg (MODBUS_CH  *pch,
     config.bufsz     = 128;
     
     rt_device_control(uart_dev, RT_DEVICE_CTRL_CONFIG, &config);
-    rt_device_open(uart_dev, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_DMA_TX);
-    rt_device_set_rx_indicate(uart_dev, mb_rx_1_byte_handler);
+    if(rt_device_open(uart_dev, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_DMA_RX) == RT_EOK)
+    {
+        rt_device_set_rx_indicate(uart_dev, mb_rx_handler);
+    }
 }
 
 /*
