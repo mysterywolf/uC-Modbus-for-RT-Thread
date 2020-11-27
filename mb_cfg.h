@@ -27,8 +27,25 @@
 
 #include <rtconfig.h>
 
-#define MB_OS_CFG_RX_TASK_PRIO 10
-#define MB_OS_CFG_RX_TASK_STK_SIZE 512
+/*
+*********************************************************************************************************
+*                                           OS Configuration
+*
+*********************************************************************************************************
+*/
+
+#ifdef PKG_USING_UC_MODBUS_TASK_PRIO
+#define  MB_OS_CFG_RX_TASK_PRIO           PKG_USING_UC_MODBUS_TASK_PRIO
+#else
+#define  MB_OS_CFG_RX_TASK_PRIO           10
+#endif
+
+#ifdef PKG_USING_UC_MODBUS_TASK_STK_SIZE
+#define  MB_OS_CFG_RX_TASK_STK_SIZE       PKG_USING_UC_MODBUS_TASK_STK_SIZE
+#else
+#define  MB_OS_CFG_RX_TASK_STK_SIZE       512
+#endif
+
 
 /*
 *********************************************************************************************************
