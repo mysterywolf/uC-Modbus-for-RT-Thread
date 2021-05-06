@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018, RT-Thread Development Team
+ * Copyright (c) 2006-2021, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -29,7 +29,7 @@
 *                                              uC/Modbus
 *
 *                                     MODBUS BOARD SUPPORT PACKAGE
-*                                        RT-Thread UART Device 
+*                                        RT-Thread UART Device
 *
 *
 * Filename : mb_bsp.c
@@ -52,10 +52,10 @@
 *********************************************************************************************************
 *                                               GLOBALS
 *********************************************************************************************************
-*/     
+*/
 
 
- 
+
 /*
 *********************************************************************************************************
 *                                             MB_CommExit()
@@ -86,7 +86,7 @@ CPU_VOID  MB_CommExit (CPU_VOID)
             continue;
         }
 
-        rt_snprintf(uart_dev_name, RT_NAME_MAX, "uart%d", pch->PortNbr);   
+        rt_snprintf(uart_dev_name, RT_NAME_MAX, "uart%d", pch->PortNbr);
         uart_dev = rt_device_find(uart_dev_name);
         if(uart_dev == (rt_device_t)0){
             pch++;
@@ -106,10 +106,10 @@ static rt_err_t mb_rx_handler(rt_device_t dev, rt_size_t size)
     MODBUS_CH  *pch;
     char dev_id_name[RT_NAME_MAX] = {0};
     CPU_INT08U id;
-    
+
     rt_strncpy(dev_id_name, &dev->parent.name[4], 2); /* "uart1" -> "1"*/
     id = atoi(dev_id_name); /* "1" -> 1 */
-    
+
     pch = &MB_ChTbl[0];
     for (ch = 0; ch < MODBUS_CFG_MAX_CH; ch++) {
         if(pch->PortNbr == id){
@@ -157,11 +157,11 @@ static rt_err_t mb_rx_handler(rt_device_t dev, rt_size_t size)
 *********************************************************************************************************
 */
 
-CPU_VOID  MB_CommPortCfg (MODBUS_CH  *pch, 
-                          CPU_INT08U  port_nbr, 
-                          CPU_INT32U  baud, 
-                          CPU_INT08U  bits, 
-                          CPU_INT08U  parity, 
+CPU_VOID  MB_CommPortCfg (MODBUS_CH  *pch,
+                          CPU_INT08U  port_nbr,
+                          CPU_INT32U  baud,
+                          CPU_INT08U  bits,
+                          CPU_INT08U  parity,
                           CPU_INT08U  stops)
 {
     char uart_dev_name[RT_NAME_MAX]={0};
@@ -175,9 +175,9 @@ CPU_VOID  MB_CommPortCfg (MODBUS_CH  *pch,
     pch->BaudRate       = baud;
     pch->Parity         = parity;
     pch->Bits           = bits;
-    pch->Stops          = stops;        
+    pch->Stops          = stops;
 
-    rt_snprintf(uart_dev_name, RT_NAME_MAX, "uart%d", port_nbr);   
+    rt_snprintf(uart_dev_name, RT_NAME_MAX, "uart%d", port_nbr);
     uart_dev = rt_device_find(uart_dev_name);
     if(uart_dev == (rt_device_t)0){
         return;
@@ -185,43 +185,43 @@ CPU_VOID  MB_CommPortCfg (MODBUS_CH  *pch,
 
     switch(baud)
     {
-        case 2400: 
+        case 2400:
             config.baud_rate = BAUD_RATE_2400; break;
-        case 4800: 
+        case 4800:
             config.baud_rate = BAUD_RATE_4800; break;
-        case 9600: 
+        case 9600:
             config.baud_rate = BAUD_RATE_9600; break;
-        case 19200: 
+        case 19200:
             config.baud_rate = BAUD_RATE_19200; break;
-        case 38400: 
+        case 38400:
             config.baud_rate = BAUD_RATE_38400; break;
-        case 57600: 
+        case 57600:
             config.baud_rate = BAUD_RATE_57600; break;
-        case 115200: 
+        case 115200:
             config.baud_rate = BAUD_RATE_115200; break;
-        case 230400: 
+        case 230400:
             config.baud_rate = BAUD_RATE_230400; break;
-        case 460800: 
+        case 460800:
             config.baud_rate = BAUD_RATE_460800; break;
-        case 921600: 
+        case 921600:
             config.baud_rate = BAUD_RATE_921600; break;
-        case 2000000: 
+        case 2000000:
             config.baud_rate = BAUD_RATE_2000000; break;
-        case 3000000: 
+        case 3000000:
             config.baud_rate = BAUD_RATE_3000000; break;
         default:
             config.baud_rate = BAUD_RATE_115200; break;
     }
-    
+
     switch(bits)
     {
         case 7:
            config.data_bits = DATA_BITS_7; break;
         case 8:
         default:
-           config.data_bits = DATA_BITS_8; break;        
+           config.data_bits = DATA_BITS_8; break;
     }
-    
+
     switch(stops)
     {
         case 2:
@@ -230,7 +230,7 @@ CPU_VOID  MB_CommPortCfg (MODBUS_CH  *pch,
         default:
             config.stop_bits = STOP_BITS_1; break;
     }
-    
+
     switch(parity)
     {
         case MODBUS_PARITY_ODD:
@@ -243,7 +243,7 @@ CPU_VOID  MB_CommPortCfg (MODBUS_CH  *pch,
     }
 
     config.bufsz     = 128;
-    
+
     rt_device_control(uart_dev, RT_DEVICE_CTRL_CONFIG, &config);
     if(rt_device_open(uart_dev, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_DMA_RX) == RT_EOK)
     {
@@ -272,7 +272,7 @@ void  MB_Tx (MODBUS_CH  *pch)
 {
     char uart_dev_name[RT_NAME_MAX]={0};
     rt_device_t uart_dev;
-    
+
     pch->TxBufPtr = &pch->TxBuf[0];
     if (pch->TxBufByteCtr > 0) {
 #if (MODBUS_CFG_MASTER_EN == DEF_ENABLED)
@@ -283,14 +283,14 @@ void  MB_Tx (MODBUS_CH  *pch)
             pch->RxBufByteCtr  = 0;                             /* Flush Rx buffer                                    */
         }
 #endif
-        rt_snprintf(uart_dev_name, RT_NAME_MAX, "uart%d", pch->PortNbr);   
+        rt_snprintf(uart_dev_name, RT_NAME_MAX, "uart%d", pch->PortNbr);
         uart_dev = rt_device_find(uart_dev_name);
         if(uart_dev == (rt_device_t)0){
             return;
         }
-        
+
         rt_device_write(uart_dev,0,pch->TxBufPtr,pch->TxBufByteCtr); /* send a message */
-        
+
         /* end of transmission */
         pch->TxCtr = pch->TxBufByteCtr;
         pch->TxBufByteCtr = 0;
@@ -320,7 +320,7 @@ CPU_VOID  MB_RTU_TmrInit (void)
 }
 #endif
 
- 
+
 /*
 *********************************************************************************************************
 *                                           MB_RTU_TmrExit()
@@ -339,12 +339,12 @@ CPU_VOID  MB_RTU_TmrInit (void)
 
 #if (MODBUS_CFG_RTU_EN == DEF_ENABLED)
 CPU_VOID  MB_RTU_TmrExit (CPU_VOID)
-{    
+{
 }
 #endif
 
 
- 
+
 /*
 *********************************************************************************************************
 *                                       MB_RTU_TmrISR_Handler()
